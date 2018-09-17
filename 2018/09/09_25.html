@@ -7,9 +7,9 @@
 </head>
 <body>
 
-<h1>Досрочные выборы Губернатора Приморского края 16.09.2018 (второй тур)</h1>
+<h1>Досрочные выборы Губернатора Приморского края 09.09.2018</h1>
 
-<script src="16_25.js"></script>
+<script src="09_25.js"></script>
 
 <style>
 	h1       { text-align: center; }
@@ -41,8 +41,6 @@ for (i=0;i<=100;i++) plot[4][i] = [0,0,0,100]
 
 for (i in data)
 {
-	if (!data[i].stat) { st += '<tr><td>'+i+'</td><td colspan="25">нет данных</td></tr>'; continue; }
-
 	people += data[i].people
 	papers += data[i].papers_in_uik + data[i].papers_in_home
 	spoils += data[i].papers_spoil
@@ -69,6 +67,9 @@ for (i in data)
 		+ '<td>'+data[i].papers_spoil+'</td><td><b>'+Math.round(data[i].papers_spoil/t*100)+'%</b></td>'
 		+ '<td>'+data[i].stat[0]+'</td><td><b>'+Math.round(data[i].stat[0]/t*100)+'%</b></td>'
 		+ '<td>'+data[i].stat[1]+'</td><td><b>'+Math.round(data[i].stat[1]/t*100)+'%</b></td>'
+		+ '<td>'+data[i].stat[2]+'</td><td><b>'+Math.round(data[i].stat[2]/t*100)+'%</b></td>'
+		+ '<td>'+data[i].stat[3]+'</td><td><b>'+Math.round(data[i].stat[3]/t*100)+'%</b></td>'
+		+ '<td>'+data[i].stat[4]+'</td><td><b>'+Math.round(data[i].stat[4]/t*100)+'%</b></td>'
 		+ '</tr>'
 
 	stat[0] += data[i].stat[0]
@@ -103,8 +104,11 @@ st = '<table>'
 	+   '<th>в УИК</th><th>на дому</th>'
 	+   '<th title="действительных">действ.</th><th title="недействительных">нед.</th><th title="утраченных">утр.</th><th title="неучтённых">неучт.</th>'
 	+   '<th colspan="2">Испорчено</th>'
+	+   '<th colspan="2">Андрейченко</th>'
 	+   '<th colspan="2">Ищенко</th>'
+	+   '<th colspan="2">Козицкий</th>'
 	+   '<th colspan="2">Тарасенко</th>'
+	+   '<th colspan="2">Толмачева</th>'
 	+ '</tr>'
 	+ st
 	+ '<tr>'
@@ -112,6 +116,9 @@ st = '<table>'
 	+   '<th>'+spoils +'</th><th><b>'+Math.round(spoils /papers*100)+'%</b></th>'
 	+   '<th>'+stat[0]+'</th><th><b>'+Math.round(stat[0]/papers*100)+'%</b></th>'
 	+   '<th>'+stat[1]+'</th><th><b>'+Math.round(stat[1]/papers*100)+'%</b></th>'
+	+   '<th>'+stat[2]+'</th><th><b>'+Math.round(stat[2]/papers*100)+'%</b></th>'
+	+   '<th>'+stat[3]+'</th><th><b>'+Math.round(stat[3]/papers*100)+'%</b></th>'
+	+   '<th>'+stat[4]+'</th><th><b>'+Math.round(stat[4]/papers*100)+'%</b></th>'
 	+ '</tr>'
 	+ '</table>'
 document.write(st)
@@ -127,17 +134,20 @@ for (i=0; i<=100; i++) { plot[4][i][2] /= plot[4][i][0]; plot[4][i].shift(); }
 
 var plot_ = []
 for (i=0; i<=100; i++)
-if (plot[0][i][0] || plot[1][i][0])
+if (plot[0][i][0] || plot[1][i][0] || plot[2][i][0] || plot[3][i][0] || plot[4][i][0])
 plot_.push([i,
 	plot[0][i][0]?plot[0][i]:null,
 	plot[1][i][0]?plot[1][i]:null,
+	plot[2][i][0]?plot[2][i]:null,
+	plot[3][i][0]?plot[3][i]:null,
+	plot[4][i][0]?plot[4][i]:null,
 ])
 new Dygraph(
 	document.getElementById("plot"),
 	plot_,
 	{
 		width: '100%', height: '400',
-		labels: ['Явка', 'Ищенко', 'Тарасенко'],
+		labels: ['Явка', 'Андрейченко', 'Ищенко', 'Козицкий', 'Тарасенко', 'Толмачева' ],
 		customBars: true,
 		legend: 'always',
 		legendFormatter: legend,

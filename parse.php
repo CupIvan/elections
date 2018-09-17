@@ -88,16 +88,18 @@ $url = 'http://www.nnov.vybory.izbirkom.ru/region/nnov'
 	.'?action=show&root_a=152406012&vrn=25220001737786&region=52&global=&type=0&sub_region=52&prver=0&pronetvd=null';
 $url = 'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom'
 	.'?action=show&root_a=null&vrn=22520001508349&region=25&global=null&type=0&prver=0&pronetvd=null';
+$url = 'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom'
+	.'?action=show&root_a=null&vrn=22520001430251&region=25&global=null&type=0&prver=0&pronetvd=null';
 foreach (getTIKs($url) as $a)
 foreach (getUIKs($a['url']) as $a)
 {
 	echo $a['name'];
 	$x = getResults(str_replace('type=0', 'type=234', $a['url']));
 	if (empty($x['people']))
-		echo " - UNKNOW\n";
+		echo " - UNKNOW SKIP\n";
 	else
 		echo ' - '.round(($x['papers_in_uik'] + $x['papers_in_home']) / $x['people'] * 100, 2).'%'."\n";
 	$res[$a['uik']] = $x;
 }
 
-file_put_contents('16_25.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
+file_put_contents('2018/09/09_25.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
