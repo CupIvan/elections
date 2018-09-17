@@ -90,6 +90,7 @@ $url = 'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom'
 	.'?action=show&root_a=null&vrn=22520001508349&region=25&global=null&type=0&prver=0&pronetvd=null';
 $url = 'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom'
 	.'?action=show&root_a=null&vrn=22520001430251&region=25&global=null&type=0&prver=0&pronetvd=null';
+$url = 'http://www.moscow_city.vybory.izbirkom.ru/region/izbirkom?action=show&root_a=null&vrn=27720002197402&region=77&global=null&type=0&prver=0&pronetvd=null';
 foreach (getTIKs($url) as $a)
 foreach (getUIKs($a['url']) as $a)
 {
@@ -102,4 +103,4 @@ foreach (getUIKs($a['url']) as $a)
 	$res[$a['uik']] = $x;
 }
 
-file_put_contents('2018/09/09_25.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
+file_put_contents('2018/09/09_77.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
