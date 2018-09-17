@@ -19,6 +19,7 @@
 	th       { background: #EEE; }
 	tr:nth-child(odd) { background: #FAFAFA; }
 	tr:hover { background: #EEE; }
+	.warn    { background: #FAA; }
 
 	.dygraph-legend { left: 60px !important; }
 </style>
@@ -39,6 +40,8 @@ for (i=0;i<=100;i++) plot[2][i] = [0,0,0,100]
 for (i=0;i<=100;i++) plot[3][i] = [0,0,0,100]
 for (i=0;i<=100;i++) plot[4][i] = [0,0,0,100]
 
+var is_many_nadom
+
 for (i in data)
 {
 	if (!data[i].stat) { st += '<tr><td>'+i+'</td><td colspan="25">нет данных</td></tr>'; continue; }
@@ -49,6 +52,7 @@ for (i in data)
 	n++
 
 	t = data[i].papers_in_uik + data[i].papers_in_home
+	is_many_nadom = (data[i].papers_in_home / data[i].people) > 0.2
 
 	st += '<tr>'
 		+ '<td>'+i+'</td>'
@@ -59,7 +63,7 @@ for (i in data)
 		+ '<td>'+data[i].papers_gave_home+'</td>'
 		+ '<td>'+data[i].papers_destroed+'</td>'
 		+ '<td>'+data[i].papers_in_uik+'</td>'
-		+ '<td>'+data[i].papers_in_home+'</td>'
+		+ '<td'+(is_many_nadom?' class="warn" title="Слишком много надомников"':'')+'>'+data[i].papers_in_home+'</td>'
 
 		+ '<td>'+data[i].papers_good+'</td>'
 		+ '<td>'+data[i].papers_spoil+'</td>'
