@@ -34,6 +34,9 @@ function getUIKs($url)
 {
 	$st = getPage($url);
 
+	if (preg_match('#Для просмотра данных по участковым избирательным комиссиям перейдите на <a href="([^"]+)#su', $st, $m))
+		$st = getPage(html_entity_decode($m[1]));
+
 	$res = [];
 
 	if (!preg_match('#<select name="gs">.+?</select>#', $st, $m)) return $res;
@@ -63,18 +66,18 @@ function getResults($url)
 		$res = [
 			'people'           => $m[1],
 			'papers_total'     => $m[2],
-			'papers_gave_uik'  => $m[3],
-			'papers_gave_home' => $m[4],
-			'papers_destroed'  => $m[5],
+			'papers_gave_uik'  => $m[4],
+			'papers_gave_home' => $m[5],
+			'papers_destroed'  => $m[6],
 
-			'papers_in_home'   => $m[6],
-			'papers_in_uik'    => $m[7],
-			'papers_spoil'     => $m[8],
-			'papers_good'      => $m[9],
-			'papers_lost'      => $m[10],
-			'papers_skip'      => $m[11],
+			'papers_in_home'   => $m[7],
+			'papers_in_uik'    => $m[8],
+			'papers_spoil'     => $m[9],
+			'papers_good'      => $m[10],
+			'papers_lost'      => $m[11],
+			'papers_skip'      => $m[12],
 		];
-		$res['stat'] = array_slice($m, 12);
+		$res['stat'] = array_slice($m, 13);
 	}
 	return $res;
 }
@@ -83,13 +86,18 @@ $res = [];
 
 $url = 'http://www.nnov.vybory.izbirkom.ru/region/nnov'
 	.'?action=show&root_a=152406012&vrn=25220001737786&region=52&global=&type=0&sub_region=52&prver=0&pronetvd=null';
+$url = 'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom'
+	.'?action=show&root_a=null&vrn=22520001508349&region=25&global=null&type=0&prver=0&pronetvd=null';
 foreach (getTIKs($url) as $a)
 foreach (getUIKs($a['url']) as $a)
 {
 	echo $a['name'];
 	$x = getResults(str_replace('type=0', 'type=234', $a['url']));
-	echo ' - '.round(($x['papers_in_uik'] + $x['papers_in_home']) / $x['people'] * 100, 2).'%'."\n";
+	if (empty($x['people']))
+		echo " - UNKNOW\n";
+	else
+		echo ' - '.round(($x['papers_in_uik'] + $x['papers_in_home']) / $x['people'] * 100, 2).'%'."\n";
 	$res[$a['uik']] = $x;
 }
 
-file_put_contents('./data/2018-09-09_52.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
+file_put_contents('16_25.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
