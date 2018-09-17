@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Сравнение результатов выборов Губернатора Приморского края</title>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
+	<meta chraset="utf-8">
+</head>
+<body>
+
+<h1>Сравнение результатов выборов Губернатора Приморского края</h1>
+
+<center>
+	<a href="09_25.html">Первый тур</a>
+	|
+	<a href="16_25.html">Второй тур</a>
+</center>
+
+<div id="plot"></div>
+
+<script src="09_25.js"></script><script>var tur1 = data</script>
+<script src="16_25.js"></script><script>var tur2 = data</script>
+
+<style>
+	h1       { text-align: center; }
+	section  { display: table; margin: auto; }
+	table    { border-collapse: collapse; }
+	td, th   { padding: 2px 10px; text-align: center; border: 1px solid #999; }
+	th       { background: #EEE; }
+	tr:nth-child(odd) { background: #FAFAFA; }
+	tr:hover { background: #EEE; }
+	.win     { font-weight: bold; background: #AAA; }
+	.warn    { background: #FAA; }
+
+	#plot    { display: table; margin: auto; }
+</style>
+
+<section>
+
+<div id="h"></div>
+
+<div id="plot"></div>
+
+<script>
+var data = {}, n=0, st = ''
+var plot = [[],[]]
+
+for (i in tur1)
+{
+	if (!data[i]) data[i] = {tur1:{}, tur2:{}}
+	data[i].tur1.people = tur1[i].people
+	data[i].tur1.papers = tur1[i].papers_in_uik + tur1[i].papers_in_home
+	data[i].tur1.yavka  = Math.round(data[i].tur1.papers / data[i].tur1.people * 100)
+	data[i].tur1.stat1  = tur1[i].stat[1]
+	data[i].tur1.stat2  = tur1[i].stat[3]
+}
+
+for (i in tur2)
+if (tur2[i].people)
+{
+	if (!data[i]) data[i] = {tur1:{}, tur2:{}}
+	data[i].tur2.people = tur2[i].people
+	data[i].tur2.papers = tur2[i].papers_in_uik + tur2[i].papers_in_home
+	data[i].tur2.yavka  = Math.round(data[i].tur2.papers / data[i].tur2.people * 100)
+	data[i].tur2.stat1  = tur2[i].stat[0]
+	data[i].tur2.stat2  = tur2[i].stat[1]
+}
+
+var t1s1, t1s2, t2s1, t2s2, warn, j
+
+for (i in data)
+{
+	t1s1 = Math.round(data[i].tur1.stat1/data[i].tur1.papers*100)
+	t1s2 = Math.round(data[i].tur1.stat2/data[i].tur1.papers*100)
+	t2s1 = Math.round(data[i].tur2.stat1/data[i].tur2.papers*100)
+	t2s2 = Math.round(data[i].tur2.stat2/data[i].tur2.papers*100)
+	warn = false
+	if (data[i].tur1.stat2/data[i].tur2.stat2 < data[i].tur1.stat1/data[i].tur2.stat1*0.5) warn = true // прибавка более чем на 50% относительно Ищенко
+//	if (t1s1 > t1s2) if (t2s1 < t2s2) warn = true
+//	if (t1s1 < t1s2) if (t2s1 > t2s2) warn = true
+	st += '<tr'+(warn?' class="warn" title="Существенная прибавка избирателей за Тарасенко"':'')+'>'
+		+ '<td>'+i+'</td>'
+		+ '<td>'+(data[i].tur1.people||'')+'</td>'
+		+ '<td>'+(data[i].tur1.yavka||'')+'%</td>'
+		+ '<td>'+(data[i].tur1.stat1||'')+'</td>'
+		+ '<td'+(t1s1>t1s2?' class="win"':'')+'>'+(t1s1?t1s1+'%':'')+'</td>'
+		+ '<td>'+(data[i].tur1.stat2||'')+'</td>'
+		+ '<td'+(t1s2>t1s1?' class="win"':'')+'>'+(t1s2?t1s2+'%':'')+'</b></td>'
+
+		+ '<td>'+(data[i].tur2.people||'')+'</td>'
+		+ '<td>'+(data[i].tur2.yavka||'')+'%</td>'
+		+ '<td>'+(data[i].tur2.stat1||'')+'</td>'
+		+ '<td'+(t2s1>t2s2?' class="win"':'')+'>'+(t2s1?t2s1+'%':'')+'</b></td>'
+		+ '<td>'+(data[i].tur2.stat2||'')+'</td>'
+		+ '<td'+(t2s2>t2s1?' class="win"':'')+'>'+(t2s2?t2s2+'%':'')+'</b></td>'
+		+ '</tr>'
+	j = data[i].tur2.yavka
+	if (!plot[0][j]) plot[0][j] = 0; plot[0][j] += data[i].tur2.stat1 - data[i].tur1.stat1
+	if (!plot[1][j]) plot[1][j] = 0; plot[1][j] += data[i].tur2.stat2 - data[i].tur1.stat2
+	n++
+}
+document.getElementById('h').innerHTML = ''
+	+ '<p>Всего участков: '+n+'</p>'
+
+st = '<table>'
+	+ '<tr>'
+	+   '<th rowspan="2">УИК</th>'
+	+   '<th colspan="6">Первый тур</th>'
+	+   '<th colspan="6">Второй тур</th>'
+	+ '</tr>'
+	+ '<tr>'
+	+   '<th>избират.</th><th>явка</th><th colspan="2">Ищенко</th><th colspan="2">Тарасенко</th>'
+	+   '<th>избират.</th><th>явка</th><th colspan="2">Ищенко</th><th colspan="2">Тарасенко</th>'
+	+ '</tr>'
+	+ st
+	+ '</table>'
+document.write(st)
+
+// рисуем график
+var plot_ = []
+for (i=0; i<=100; i++)
+if (plot[0][i] || plot[1][i])
+plot_.push([i,
+	plot[0][i]?plot[0][i]:null,
+	plot[1][i]?plot[1][i]:null,
+])
+new Dygraph(
+	document.getElementById("plot"),
+	plot_,
+	{
+		width: '800', height: '400',
+		labels: ['Явка', 'Прибавка Ищенко', 'Прибавка Тарасенко'],
+		legend: 'always',
+		legendFormatter: legend,
+		dateWindow: [0, 100],
+	}
+)
+
+function legend(data)
+{
+	if (data.x == null)
+		return '<br>' + data.series.map(function(series) { return series.dashHTML + ' ' + series.labelHTML }).join('<br>');
+
+	var html = 'Участки с явкой <b>'+data.xHTML+'%</b>'
+	data.series.forEach(function(series) {
+		html += '<br>' + series.dashHTML + ' ' + series.labelHTML + ': ' + (series.yHTML||'0')
+	})
+	return html
+}
+</script>
+
+</section>
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+if (document.location.host.indexOf('_') == -1)
+(function (d, w, c) { (w[c] = w[c] || []).push(function() { try { w.yaCounter50368984 = new Ya.Metrika2({ id:50368984, clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true }); } catch(e) { } }); var n = d.getElementsByTagName("script")[0], s = d.createElement("script"), f = function () { n.parentNode.insertBefore(s, n); }; s.type = "text/javascript"; s.async = true; s.src = "https://mc.yandex.ru/metrika/tag.js"; if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); } })(document, window, "yandex_metrika_callbacks2"); </script>
+<noscript><div><img src="https://mc.yandex.ru/watch/50368984" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
+</body>
+</html>
