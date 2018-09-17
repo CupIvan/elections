@@ -66,18 +66,18 @@ function getResults($url)
 		$res = [
 			'people'           => $m[1],
 			'papers_total'     => $m[2],
-			'papers_gave_uik'  => $m[3],
-			'papers_gave_home' => $m[4],
-			'papers_destroed'  => $m[5],
+			'papers_gave_uik'  => $m[5],
+			'papers_gave_home' => $m[6],
+			'papers_destroed'  => $m[7],
 
-			'papers_in_home'   => $m[6],
-			'papers_in_uik'    => $m[7],
-			'papers_spoil'     => $m[8],
-			'papers_good'      => $m[9],
-			'papers_lost'      => $m[10],
-			'papers_skip'      => $m[11],
+			'papers_in_home'   => $m[8],
+			'papers_in_uik'    => $m[9],
+			'papers_spoil'     => $m[10],
+			'papers_good'      => $m[11],
+			'papers_lost'      => $m[12],
+			'papers_skip'      => $m[13],
 		];
-		$res['stat'] = array_slice($m, 12);
+		$res['stat'] = array_slice($m, 14);
 	}
 	return $res;
 }
@@ -92,6 +92,7 @@ $url = 'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom'
 	.'?action=show&root_a=null&vrn=22520001430251&region=25&global=null&type=0&prver=0&pronetvd=null';
 $url = 'http://www.moscow_reg.vybory.izbirkom.ru/region/izbirkom?action=show&root_a=null&vrn=25020002699373&region=50&global=null&type=0&prver=0&pronetvd=null';
 $url = 'http://www.moscow_city.vybory.izbirkom.ru/region/izbirkom?action=show&root_a=null&vrn=27720002197402&region=77&global=null&type=0&prver=0&pronetvd=null';
+$url = 'http://www.vladimir.vybory.izbirkom.ru/region/izbirkom?action=show&root_a=null&vrn=2332000926149&region=33&global=null&type=0&prver=0&pronetvd=null';
 foreach (getTIKs($url) as $a)
 foreach (getUIKs($a['url']) as $a)
 {
@@ -104,4 +105,4 @@ foreach (getUIKs($a['url']) as $a)
 	$res[$a['uik']] = $x;
 }
 
-file_put_contents('2018/09/09_77.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
+file_put_contents('2018/09/09_33.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
