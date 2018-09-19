@@ -69,7 +69,8 @@ function getResults($url)
 
 $res = [];
 
-foreach (getTIKs(33, 'http://www.vladimir.vybory.izbirkom.ru/region/vladimir/?action=ik&vrn=2332000871582') as $a)
+//foreach (getTIKs(33, 'http://www.vladimir.vybory.izbirkom.ru/region/vladimir/?action=ik&vrn=2332000871582') as $a)
+foreach (getTIKs(52, 'http://www.nnov.vybory.izbirkom.ru/region/nnov/?action=ik&vrn=25220001509813') as $a)
 foreach (getUIKs($a['url']) as $a)
 {
 	echo $a['name'];
@@ -85,4 +86,4 @@ foreach (getUIKs($a['url']) as $a)
 	$res[] = $x;
 }
 
-file_put_contents('./data/uiks/33.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
+file_put_contents('./data/uiks/52.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
