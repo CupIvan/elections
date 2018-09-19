@@ -7,7 +7,7 @@ function getPage($url)
 	if (!file_exists($dir = dirname($cache))) mkdir($dir, 0777, true);
 	if (file_exists($cache))
 	if (time() - filemtime($cache) < 24*3600) return file_get_contents($cache);
-	$st = file_get_contents($url);
+	$st = @file_get_contents($url);
 	$st = iconv('cp1251', 'utf-8', $st);
 	if ($st) file_put_contents($cache, $st);
 	return $st;
@@ -70,7 +70,8 @@ function getResults($url)
 $res = [];
 
 //foreach (getTIKs(33, 'http://www.vladimir.vybory.izbirkom.ru/region/vladimir/?action=ik&vrn=2332000871582') as $a)
-foreach (getTIKs(52, 'http://www.nnov.vybory.izbirkom.ru/region/nnov/?action=ik&vrn=25220001509813') as $a)
+//foreach (getTIKs(52, 'http://www.nnov.vybory.izbirkom.ru/region/nnov/?action=ik&vrn=25220001509813') as $a)
+foreach (getTIKs(25, 'http://www.primorsk.vybory.izbirkom.ru/region/primorsk/?action=ik&vrn=22520001238467') as $a)
 foreach (getUIKs($a['url']) as $a)
 {
 	echo $a['name'];
@@ -86,4 +87,4 @@ foreach (getUIKs($a['url']) as $a)
 	$res[] = $x;
 }
 
-file_put_contents('./data/uiks/52.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
+file_put_contents('./data/uiks/25.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
