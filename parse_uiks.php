@@ -71,7 +71,8 @@ $res = [];
 
 //foreach (getTIKs(33, 'http://www.vladimir.vybory.izbirkom.ru/region/vladimir/?action=ik&vrn=2332000871582') as $a)
 //foreach (getTIKs(52, 'http://www.nnov.vybory.izbirkom.ru/region/nnov/?action=ik&vrn=25220001509813') as $a)
-foreach (getTIKs(25, 'http://www.primorsk.vybory.izbirkom.ru/region/primorsk/?action=ik&vrn=22520001238467') as $a)
+//foreach (getTIKs(25, 'http://www.primorsk.vybory.izbirkom.ru/region/primorsk/?action=ik&vrn=22520001238467') as $a)
+foreach (getTIKs(50, 'http://www.moscow_reg.vybory.izbirkom.ru/region/moscow_reg/?action=ik&vrn=25020002358847') as $a)
 foreach (getUIKs($a['url']) as $a)
 {
 	echo $a['name'];
@@ -87,4 +88,4 @@ foreach (getUIKs($a['url']) as $a)
 	$res[] = $x;
 }
 
-file_put_contents('./data/uiks/25.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
+file_put_contents('./data/uiks/50.js', 'var data='.json_encode($res, JSON_NUMERIC_CHECK));
