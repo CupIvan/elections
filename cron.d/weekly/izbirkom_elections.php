@@ -3,7 +3,7 @@
 /**
  * Скрипт выполняется раз в неделю и мониторит новые выборы на сайте Избиркома.
  */
-require_once __DIR__ . '/../../m/init.php';
+require_once __DIR__ . '/../../init.php';
 
 function getElections($time)
 {

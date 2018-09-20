@@ -1,0 +1,6 @@
+table.t { border-collapse: collapse; }
+table.t td,
+table.t th { padding: 5px 10px; border: 1px solid #AAA; }
+table.t th { background: #EEE; }
+table.t tr:nth-child(odd) { background: #FAFAFA; }
+table.t tr:hover { background: #EEE; }
