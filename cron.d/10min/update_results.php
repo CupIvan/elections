@@ -109,7 +109,7 @@ function getResults($url)
 	return $res;
 }
 
-function calcData($date, $region, $a)
+function calcData($a)
 {
 	$rows = $a['rows'];
 	$data = [];
@@ -150,9 +150,7 @@ function calcData($date, $region, $a)
 		}
 		$data[$uik] = $x;
 	}
-	$fname = __DIR__ . '/../../'.date('Y/m/d', strtotime($date))."_$region.js";
-	@mkdir(dirname($fname), 0777, true);
-	file_put_contents($fname, 'var data='.json_encode($data));
+	return $data;
 }
 
 function cacheData($a)
@@ -166,10 +164,33 @@ function cacheData($a)
 	file_put_contents($GLOBALS['DIR'].'/data/'.$GLOBALS['CK'].'.json', $st);
 }
 
-$sql = 'SELECT `date`,`region`,`url` FROM `elections` WHERE `state` = "calc"';
+function getSMSCIK($id)
+{
+	$res = [];
+	if (!$id) return $res;
+	$st = getPage('http://www.sms-cik.org/elections/'.$id.'/export_csv');
+	$a = explode("\n", $st);
+	for ($i=1; $i<count($a); $i++)
+	{
+		$row = explode(',', $a[$i]);
+		$c = count($row);
+		if ($c < 5) continue;
+		$s = array_slice($row, 6, $c - 6 - 3);
+		foreach ($s as $k => $v) $s[$k] = (int)$v;
+		$res[$row[2]] = [
+			'people'       => (int)$row[$c-3],
+			'papers_spoil' => (int)$row[$c-2],
+			'papers_good'  => (int)$row[$c-1],
+			'stat'         => $s,
+		];
+	}
+	return $res;
+}
+
+$sql = 'SELECT `date`,`region`,`url`,`smscikId` FROM `elections` WHERE `state` = "calc"';
 foreach (mysql::getList($sql) as $_)
 {
-	$data = [];
+	$results = getSMSCIK($_['smscikId']);
 	foreach (getTIKs($_['url']) as $a)
 	{
 		if (defined('DEBUG')) echo $a['title'];
@@ -179,5 +200,10 @@ foreach (mysql::getList($sql) as $_)
 		if (empty($data)) $data = $a;
 		else foreach ($a['uiks'] as $k => $v) $data['uiks'][$k] = $v;
 	}
-	calcData($_['date'], $_['region'], $data);
+	$a = calcData($data);
+	foreach ($a as $k => $v) $results[$k] = $v;
+
+	$fname = __DIR__ . '/../../'.date('Y/m/d', strtotime($_['date'])).'_'.$_['region'].'.js';
+	@mkdir(dirname($fname), 0777, true);
+	file_put_contents($fname, 'var data='.json_encode($results));
 }
