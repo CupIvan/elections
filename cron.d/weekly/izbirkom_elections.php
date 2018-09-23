@@ -46,7 +46,7 @@ function getElections($time)
 
 for ($i=0; $i<14; $i++)
 {
-	$t = time() + 24*3600*($i+30); // COMMENT: мониторим первые две недели следующего месяца
+	$t = time() + 24*3600*($i+7); // COMMENT: мониторим первые две недели через неделю
 	$a = getElections($t);
 //	echo date("Y-m-d", $t); if ($x=count($a)) echo " - $x"; echo "\n";
 	foreach ($a as $a)

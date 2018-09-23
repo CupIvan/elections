@@ -39,6 +39,8 @@ for (i=0;i<=100;i++) plot[2][i] = [0,0,0,100]
 for (i=0;i<=100;i++) plot[3][i] = [0,0,0,100]
 for (i=0;i<=100;i++) plot[4][i] = [0,0,0,100]
 
+function _data(i, x) { return data[i] == undefined || data[i][x] == undefined ? '?' : data[i][x] }
+
 for (i in data)
 {
 	if (!data[i].stat) { st += '<tr><td>'+i+'</td><td colspan="25">нет данных</td></tr>'; continue; }
@@ -56,19 +58,19 @@ for (i in data)
 		+ '<td>'+i+'</td>'
 		+ '<td>'+data[i].people+'</td>'
 		+ '<td>'+Math.round(t/data[i].people*100)+'%</td>'
-		+ '<td>'+(data[i].papers_total||'?')+'</td>'
-		+ '<td>'+(data[i].papers_gave_uik||'?')+'</td>'
-		+ '<td>'+(data[i].papers_gave_home||'?')+'</td>'
-		+ '<td>'+(data[i].papers_destroed||'?')+'</td>'
-		+ '<td>'+(data[i].papers_in_uik||'?')+'</td>'
-		+ '<td>'+(data[i].papers_in_home||'?')+'</td>'
-
-		+ '<td>'+(data[i].papers_good||'?')+'</td>'
-		+ '<td>'+(data[i].papers_spoil||'?')+'</td>'
-		+ '<td>'+(data[i].papers_lost||'?')+'</td>'
-		+ '<td>'+(data[i].papers_skip||'?')+'</td>'
-
-		+ '<td>'+(data[i].papers_spoil||'?')+'</td><td><b>'+Math.round((data[i].papers_spoil||0)/t*100)+'%</b></td>'
+		+ '<td>'+_data(i, 'papers_total')+'</td>'
+		+ '<td>'+_data(i, 'papers_gave_uik')+'</td>'
+		+ '<td>'+_data(i, 'papers_gave_home')+'</td>'
+		+ '<td>'+_data(i, 'papers_destroed')+'</td>'
+		+ '<td>'+_data(i, 'papers_in_uik')+'</td>'
+		+ '<td>'+_data(i, 'papers_in_home')+'</td>'
+		
+		+ '<td>'+_data(i, 'papers_good')+'</td>'
+		+ '<td>'+_data(i, 'papers_spoil')+'</td>'
+		+ '<td>'+_data(i, 'papers_lost')+'</td>'
+		+ '<td>'+_data(i, 'papers_skip')+'</td>'
+	
+		+ '<td>'+_data(i, 'papers_spoil')+'</td><td><b>'+Math.round((data[i].papers_spoil||0)/t*100)+'%</b></td>'
 		+ '<td>'+(data[i].stat[0]||'?')+'</td><td><b>'+Math.round(data[i].stat[0]/t*100)+'%</b></td>'
 		+ '<td>'+(data[i].stat[1]||'?')+'</td><td><b>'+Math.round(data[i].stat[1]/t*100)+'%</b></td>'
 		+ '</tr>'

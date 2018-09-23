@@ -21,7 +21,12 @@ function getPage($url)
 		if (time() - @filemtime($fname) < 2*3600) return file_get_contents($fname);
 	}
 
-	$st = file_get_contents($url);
+	$i = 0;
+	while ($i++ < 3)
+	{
+		$err = 0; $st = @file_get_contents($url) or $err = 1;
+		if (!$err) { sleep($i); continue; }
+	}
 	if (strpos($url, 'izbirkom.ru')) $st = iconv('cp1251', 'utf-8', $st);
 
 	if (defined('DEBUG'))
@@ -57,16 +62,15 @@ function getResults($url)
 {
 	$res = ['time'=>time(), 'url'=>$url];
 	$st = getPage($url);
+
 	if (preg_match('#Для просмотра данных по участковым[^<]+<a href="([^"]+)#', $st, $m))
-	{
-		$res['url'] = html_entity_decode($m[1]);
-		$st = getPage($res['url']);
-	}
+		return getResults(html_entity_decode($m[1]));
+
 	if (preg_match('#href="([^"]+)">Сводная таблица предварительных#', $st, $m))
-	{
-		$res['url'] = html_entity_decode($m[1]);
-		$st = getPage($res['url']);
-	}
+		return getResults(html_entity_decode($m[1]));
+
+	if (preg_match('#href="([^"]+)">Сводная таблица результатов#', $st, $m))
+		return getResults(html_entity_decode($m[1]));
 
 	$x = strpos($st, 'Наименование избирательной комиссии');
 	$x = strpos($st, '<table', $x);   // начало общей таблицы
@@ -155,6 +159,7 @@ function calcData($a)
 
 function cacheData($a)
 {
+	if (empty($a)) return;
 	@mkdir($GLOBALS['DIR'].'/data/');
 	$st = json_encode($a, JSON_UNESCAPED_UNICODE)."\n";
 	$st = str_replace('"url"',  "\n".'"url"',  $st);
@@ -191,6 +196,7 @@ $sql = 'SELECT `date`,`region`,`url`,`smscikId` FROM `elections` WHERE `state` =
 foreach (mysql::getList($sql) as $_)
 {
 	$results = getSMSCIK($_['smscikId']);
+	$data = [];
 	foreach (getTIKs($_['url']) as $a)
 	{
 		if (defined('DEBUG')) echo $a['title'];
