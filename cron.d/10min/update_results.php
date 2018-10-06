@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../init.php';
 // define('DEBUG', 1);
 
 
-$sql = 'SELECT `id`,`date`,`region`,`url`,`smscikId` FROM `elections` WHERE `state` = "calc"';
+$sql = 'SELECT `id`,`date`,`region`,`url`,`smscikId`,`state` FROM `elections` WHERE `state` IN ("calc", "recalc")';
 foreach (mysql::getList($sql) as $_)
 {
 	// СМС ЦИК
@@ -23,24 +23,20 @@ foreach (mysql::getList($sql) as $_)
 		mysql::insert('results', $a);
 	}
 	// Избирком
-	$res = getTIKs($_['url']);
-	if (empty($res)) $res = [['url' => $_['url']]];
-	foreach ($res as $a)
+	$t = time();
+	$data = getResults($_['url']);
+
+	foreach (calcData($data) as $uik => $a)
 	{
-		if (defined('DEBUG')) echo $a['title'];
-		$t = time();
-		$a = getResults($a['url']);
-		if (defined('DEBUG')) echo ' - '.count($a['uiks'])."\n";
-		foreach (calcData($a) as $uik => $a)
-		{
-			$a['md5']        = md5(json_encode($a));
-			$a['electionId'] = $_['id'];
-			$a['UIK']        = $uik;
-			$a['timestamp']  = date('Y-m-d H:i:s', $t);
-			$a['source']     = 'izbirkom';
-			mysql::insert('results', $a);
-		}
+		$a['md5']        = md5(json_encode($a));
+		$a['electionId'] = $_['id'];
+		$a['UIK']        = $uik;
+		$a['timestamp']  = date('Y-m-d H:i:s', $t);
+		$a['source']     = 'izbirkom';
+		mysql::insert('results', $a);
 	}
+	if ($_['state'] == 'recalc')
+		mysql::update('elections', ['id'=>$_['id'], 'state'=>'end']);
 }
 
 // ------ functions ------
@@ -70,33 +66,36 @@ function getPage($url)
 	return $st;
 }
 
-function getTIKs($url)
-{
-	$res = [];
-	$st = getPage($url);
-	if (!preg_match('#<select.+?</select>#', $st, $m)) return $res;
-	$st = $m[0];
-	if (!preg_match_all('#<option value="([^"]+)">(\d+) (.+?)</option>#', $st, $m, PREG_SET_ORDER)) return $res;
-	foreach ($m as $a)
-	{
-		$res[] = [
-			'id'    => $a[2],
-			'title' => $a[3],
-			'url'   => html_entity_decode($a[1]),
-		];
-	}
-	return $res;
-}
-
 function getResults($url)
 {
 	$res = ['time'=>time(), 'url'=>$url];
 	$st = getPage($url);
 
+	if (strpos($st, 'Нижестоящие избирательные комиссии'))
+	if (strpos($st, 'УИК №') === false) // COMMENT: если страница со списком УИКов - то ниже не проваливаемся
+	{
+		if (!preg_match('#<select.+?</select>#', $st, $m)) return $res;
+		if (!preg_match_all('#<option value="([^"]+)">(\d+) (.+?)</option>#', $st, $m, PREG_SET_ORDER)) return $res;
+		foreach ($m as $a)
+		{
+			if (defined('DEBUG')) echo $a[3]."\n";
+			$url = html_entity_decode($a[1]);
+			$x = getResults($url);
+			$rows = $x['rows'];
+			$res = array_merge_recursive($res, $x);
+			$res['rows'] = $rows; // COMMENT: фиксируем, чтобы не размножался список строк
+		}
+		return $res;
+	}
+
 	if (preg_match('#Для просмотра данных по участковым[^<]+<a href="([^"]+)#', $st, $m))
 		return getResults(html_entity_decode($m[1]));
 
 	if (preg_match('#href="([^"]+)">Сводная таблица предварительных#', $st, $m))
+		return getResults(html_entity_decode($m[1]));
+
+	// TODO: нужно как-то разделять единый округ, одномандатный и многомандатный
+	if (preg_match('#href="([^"]+)">Сводная таблица результатов выборов по единому округу#', $st, $m))
 		return getResults(html_entity_decode($m[1]));
 
 	if (preg_match('#href="([^"]+)">Сводная таблица результатов#', $st, $m))
@@ -150,6 +149,7 @@ function calcData($a)
 
 	$candidates = []; $cId = 0;
 	foreach ($rows as $i => $title) if (strpos($title, 'Число') === false) $candidates[$i] = ++$cId;
+
 	foreach ($a['uiks'] as $uik => $a)
 	{
 		$x = [];
