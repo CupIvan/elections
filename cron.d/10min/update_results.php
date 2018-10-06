@@ -7,10 +7,44 @@ require_once __DIR__ . '/../../init.php';
 
 // define('DEBUG', 1);
 
-$GLOBALS['DIR'] =  __DIR__ . '/../../cache/'.date('Y-m-d').'/'.date('H:i');
-@mkdir($GLOBALS['DIR'], 0777, true);
 
-$GLOBALS['CK']  = 0;
+$sql = 'SELECT `id`,`date`,`region`,`url`,`smscikId` FROM `elections` WHERE `state` = "calc"';
+foreach (mysql::getList($sql) as $_)
+{
+	// СМС ЦИК
+	$t = time();
+	foreach (getSMSCIK($_['smscikId']) as $uik => $a)
+	{
+		$a['md5']        = md5(json_encode($a));
+		$a['electionId'] = $_['id'];
+		$a['UIK']        = $uik;
+		$a['timestamp']  = date('Y-m-d H:i:s', $t);
+		$a['source']     = 'smscik';
+		mysql::insert('results', $a);
+	}
+	// Избирком
+	$res = getTIKs($_['url']);
+	if (empty($res)) $res = [['url' => $_['url']]];
+	foreach ($res as $a)
+	{
+		if (defined('DEBUG')) echo $a['title'];
+		$t = time();
+		$a = getResults($a['url']);
+		if (defined('DEBUG')) echo ' - '.count($a['uiks'])."\n";
+		foreach (calcData($a) as $uik => $a)
+		{
+			$a['md5']        = md5(json_encode($a));
+			$a['electionId'] = $_['id'];
+			$a['UIK']        = $uik;
+			$a['timestamp']  = date('Y-m-d H:i:s', $t);
+			$a['source']     = 'izbirkom';
+			mysql::insert('results', $a);
+		}
+	}
+}
+
+// ------ functions ------
+
 function getPage($url)
 {
 	if (defined('DEBUG'))
@@ -18,25 +52,21 @@ function getPage($url)
 		$md5 = md5($url);
 		$fname = __DIR__ . '/../../cache/md5/'.substr($md5, 0, 2)."/$md5.html";
 		@mkdir(dirname($fname), 0777, true);
-		if (time() - @filemtime($fname) < 2*3600) return file_get_contents($fname);
+		if (time() - @filemtime($fname) < 6*3600) return file_get_contents($fname);
 	}
 
 	$i = 0;
 	while ($i++ < 3)
 	{
 		$err = 0; $st = @file_get_contents($url) or $err = 1;
-		if (!$err) { sleep($i); continue; }
+		if (!$err) break;
+		sleep($i);
 	}
 	if (strpos($url, 'izbirkom.ru')) $st = iconv('cp1251', 'utf-8', $st);
 
 	if (defined('DEBUG'))
 	if ($st) file_put_contents($fname, $st);
 
-	$js = ['timestamp'=>time(), 'url'=>$url, 'data'=>trim($st)];
-	$js = json_encode($js, JSON_UNESCAPED_UNICODE);
-
-	file_put_contents($GLOBALS['DIR'].'/'.$GLOBALS['CK'].'.json', $js);
-	$GLOBALS['CK']++;
 	return $st;
 }
 
@@ -117,9 +147,12 @@ function calcData($a)
 {
 	$rows = $a['rows'];
 	$data = [];
+
+	$candidates = []; $cId = 0;
+	foreach ($rows as $i => $title) if (strpos($title, 'Число') === false) $candidates[$i] = ++$cId;
 	foreach ($a['uiks'] as $uik => $a)
 	{
-		$x = ['stat'=>[]];
+		$x = [];
 		foreach ($rows as $i => $title)
 		{
 			$field = '';
@@ -129,44 +162,20 @@ function calcData($a)
 				if (stripos($title, 'полученных') !== false) $field = 'papers_total';
 				if (stripos($title, 'выданных') !== false)
 				{
-					if (stripos($title, 'в помещении')   !== false) $field = 'papers_gave_uik';
-					if (stripos($title, 'вне помещения') !== false) $field = 'papers_gave_home';
+					if (stripos($title, 'в помещении')   !== false) $field = 'papers_in_uik';
+					if (stripos($title, 'вне помещения') !== false) $field = 'papers_in_home';
 				}
-				if (stripos($title, 'погашенных')       !== false) $field = 'papers_destroed';
 				if (stripos($title, 'в переносных')     !== false) $field = 'papers_in_home';
 				if (stripos($title, 'в стационарных')   !== false) $field = 'papers_in_uik';
 				if (stripos($title, 'действительных')   !== false) $field = 'papers_good'; // COMMENT: обязательно перед строкой "недействительных"
 				if (stripos($title, 'недействительных') !== false) $field = 'papers_spoil';
-				if (stripos($title, 'утраченных')       !== false) $field = 'papers_lost';
-				if (stripos($title, 'не учтенных')      !== false) $field = 'papers_skip';
 			}
-			if (strpos($title, 'Фургал') !== false) $field = 'k1';
-			if (strpos($title, 'Шпорт')  !== false) $field = 'k2';
-			if (strpos($title, 'Орлова') !== false) $field = 'k1';
-			if (strpos($title, 'Сипягин')!== false) $field = 'k2';
-
-			if ($field)
-			{
-				if ($field == 'k1') $x['stat'][0] = $a[$i]; else
-				if ($field == 'k2') $x['stat'][1] = $a[$i]; else
-				$x[$field] = $a[$i];
-			}
+			if (isset($candidates[$i])) $field = 'k'.$candidates[$i];
+			if ($field) $x[$field] = $a[$i];
 		}
 		$data[$uik] = $x;
 	}
 	return $data;
-}
-
-function cacheData($a)
-{
-	if (empty($a)) return;
-	@mkdir($GLOBALS['DIR'].'/data/');
-	$st = json_encode($a, JSON_UNESCAPED_UNICODE)."\n";
-	$st = str_replace('"url"',  "\n".'"url"',  $st);
-	$st = str_replace('"rows"', "\n".'"rows"', $st);
-	$st = str_replace('"uiks"', "\n".'"uiks"', $st);
-	$st = preg_replace('/"\d+":\[/', "\n$0", $st);
-	file_put_contents($GLOBALS['DIR'].'/data/'.$GLOBALS['CK'].'.json', $st);
 }
 
 function getSMSCIK($id)
@@ -180,36 +189,15 @@ function getSMSCIK($id)
 		$row = explode(',', $a[$i]);
 		$c = count($row);
 		if ($c < 5) continue;
-		$s = array_slice($row, 6, $c - 6 - 3);
-		foreach ($s as $k => $v) $s[$k] = (int)$v;
-		$res[$row[2]] = [
+		$uik = $row[2];
+		$res[$uik] = [
 			'people'       => (int)$row[$c-3],
 			'papers_spoil' => (int)$row[$c-2],
 			'papers_good'  => (int)$row[$c-1],
-			'stat'         => $s,
 		];
+		$s = array_slice($row, 6, $c - 6 - 3);
+		foreach ($s as $k => $v) $res[$uik]['k'.($k+1)] = (int)$v;
 	}
 	return $res;
 }
 
-$sql = 'SELECT `date`,`region`,`url`,`smscikId` FROM `elections` WHERE `state` = "calc"';
-foreach (mysql::getList($sql) as $_)
-{
-	$results = getSMSCIK($_['smscikId']);
-	$data = [];
-	foreach (getTIKs($_['url']) as $a)
-	{
-		if (defined('DEBUG')) echo $a['title'];
-		$a = getResults($a['url']);
-		if (defined('DEBUG')) echo ' - '.count($a['uiks'])."\n";
-		cacheData($a);
-		if (empty($data)) $data = $a;
-		else foreach ($a['uiks'] as $k => $v) $data['uiks'][$k] = $v;
-	}
-	$a = calcData($data);
-	foreach ($a as $k => $v) $results[$k] = $v;
-
-	$fname = __DIR__ . '/../../'.date('Y/m/d', strtotime($_['date'])).'_'.$_['region'].'.js';
-	@mkdir(dirname($fname), 0777, true);
-	file_put_contents($fname, 'var data='.json_encode($results));
-}
