@@ -26,6 +26,12 @@ foreach (mysql::getList($sql) as $_)
 	$t = time();
 	$data = getResults($_['url']);
 
+	if ($data['state'] == 'cancel')
+	{
+		mysql::update('elections', ['id'=>$_['id'], 'state'=>'cancel']);
+		continue;
+	}
+
 	foreach (calcData($data) as $uik => $a)
 	{
 		$a['md5']        = md5(json_encode($a));
@@ -68,8 +74,14 @@ function getPage($url)
 
 function getResults($url)
 {
-	$res = ['time'=>time(), 'url'=>$url];
+	$res = ['time'=>time(), 'state'=> 'calc', 'url'=>$url];
 	$st = getPage($url);
+
+	if (strpos($st, 'организовывались, но не проводились'))
+	{
+		$res['state'] = 'cancel';
+		return $res;
+	}
 
 	if (strpos($st, 'Нижестоящие избирательные комиссии'))
 	if (strpos($st, 'УИК №') === false) // COMMENT: если страница со списком УИКов - то ниже не проваливаемся
