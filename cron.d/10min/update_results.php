@@ -159,8 +159,12 @@ function calcData($a)
 	$rows = $a['rows'];
 	$data = [];
 
-	$candidates = []; $cId = 0;
-	foreach ($rows as $i => $title) if (strpos($title, 'Число') === false) $candidates[$i] = ++$cId;
+	// определяем строки с фамилиями кандидатов - перебираем массив с конца
+	// и прекращаем, если найдём строку с числом, затем инвертируем массив
+	$candidates = []; $cId = 0; $_ = [];
+	for ($i=count($rows)-1; $i>=0; $i--) if (strpos($rows[$i], 'Число') !== false) break; else $_[] = $i;
+	$_ = array_reverse($_);
+	foreach ($_ as $_) $candidates[$_] = 'k'.(++$cId);
 
 	foreach ($a['uiks'] as $uik => $a)
 	{
@@ -182,7 +186,7 @@ function calcData($a)
 				if (stripos($title, 'действительных')   !== false) $field = 'papers_good'; // COMMENT: обязательно перед строкой "недействительных"
 				if (stripos($title, 'недействительных') !== false) $field = 'papers_spoil';
 			}
-			if (isset($candidates[$i])) $field = 'k'.$candidates[$i];
+			if (isset($candidates[$i])) $field = $candidates[$i];
 			if ($field) $x[$field] = $a[$i];
 		}
 		$data[$uik] = $x;
