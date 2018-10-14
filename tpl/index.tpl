@@ -3,6 +3,7 @@
 <head>
 	<title>Анализ выборов в Российской Федерации</title>
 	<style>@import URL('/i/style.css')</style>
+	<script src="/i/ok.js"></script>
 	<meta charset="utf-8">
 </head>
 <body>
@@ -31,10 +32,41 @@
 			<td><?=$a['title']?></td>
 			<td><?=_s($a['state'])?></td>
 			<td><?=$a['turnout']?>%</td>
+			<?$t = $t - get_tz_msk_offset($a['region']);?>
+			<?if (time() < $t + 8*3600){?>
+			<td data-time-left="<?=$t+8*3600-time()?>">до начала голосования</td>
+			<?} elseif (time() < $t + 20*3600){?>
+			<td data-time-left="<?=$t+20*3600-time()?>">до конца голосования</td>
+			<?} else {?>
 			<td><?=$a['result']?></td>
+			<?}?>
 		</tr>
 	<?}?>
 	</table>
+
+<script>
+var f, time = function() { return Math.round((new Date()).getTime() / 1000) }
+var timeStart = time()
+setInterval(f=function(){
+	var i, t, a = document.querySelectorAll('[data-time-left]')
+	for (i=0; i<a.length; i++)
+	{
+		if (!a[i].dataset.timeComment)
+			a[i].dataset.timeComment = a[i].innerHTML
+		t = a[i].dataset.timeLeft - (time() - timeStart)
+		if (t > 24*3600) { t = Math.round(t / 24 / 3600); t += ok(t, ' день ', ' дня ', ' дней ') }
+		else
+		if (t > 3600) { t = Math.round(t / 3600); t += ok(t, ' час ', ' часа ', ' часов ') }
+		else
+		if (t > 60) { t = Math.round(t / 60); t += ok(t, ' минута ', ' минуты ', ' минут ') }
+		else
+			t = 'Меньше минуты '
+		a[i].innerHTML = t + a[i].dataset.timeComment
+	}
+}, 21*1000);
+f()
+</script>
+
 </body>
 </html>
 
