@@ -74,6 +74,7 @@ function getPage($url)
 
 function getResults($url)
 {
+	if (defined('DEBUG')) echo $url."\n";
 	$res = ['time'=>time(), 'state'=> 'calc', 'url'=>$url];
 	$st = getPage($url);
 
@@ -94,7 +95,7 @@ function getResults($url)
 			$url = html_entity_decode($a[1]);
 			$x = getResults($url);
 			$rows = $x['rows'];
-			$res = array_merge_recursive($res, $x);
+			foreach ($x['uiks'] as $k => $v) $res['uiks'][$k] = $v;
 			$res['rows'] = $rows; // COMMENT: фиксируем, чтобы не размножался список строк
 		}
 		return $res;
@@ -122,13 +123,11 @@ function getResults($url)
 	$t = $m[0];
 
 	// название строк
-	$res['rows'] = [];
 	if (preg_match_all('#<tr.+?<nobr>([^<]+).+?<nobr>([^<]+)#s', $t, $m, PREG_SET_ORDER))
 	foreach ($m as $a)
 		$res['rows'][] = $a[2];
 
 	// результаты по участкам
-	$res['uiks'] = [];
 	if (!preg_match('#<table.+?</table>#s', $st, $m)) return $res;
 	$t = $m[0];
 
@@ -151,6 +150,7 @@ function getResults($url)
 			$row++;
 		}
 	}
+	if (defined('DEBUG')) echo implode(' ', array_keys($res['uiks']))."\n";
 	return $res;
 }
 
